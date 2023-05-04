@@ -2,8 +2,10 @@
 A custom CPU and assembler created for an FPGA project in my Digital Electronics class.
 
 ## Hardware Description:
-For those who will like run their code, a Logisim implementation of the CPU is provided
+For those who will like run their code, a Logisim implementation of the CPU is provided.
+
 The CPU is non-pipelined and has 4 registers and a 256-byte call stack.
+
 The address space is 12 bit.
 
 ### The instruction set is as follows:
@@ -42,5 +44,7 @@ Halts the CPU clock
 
 ## The Assembler: TCASM
 TinyCpu ASeMbler
+
 A python program that takes an input text file and creates either a binary file to transfer to the CPU via UART, or a RAM image for the logisim implementation.
+
 This should be simple enough to use just by looking at it, so I will omit the explanation.

@@ -36,7 +36,7 @@ def load_file(filepath):
             for line in file:
                 # Remove newlines at the same time as adding each line
                 inputList.append(line.replace('\n', ''))
-                print(line)
+                # print(line)
             file.close()
 
         specificProgress.stop()

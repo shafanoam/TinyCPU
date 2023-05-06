@@ -2,7 +2,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
-from tkinter.messagebox import showerror, showwarning, showinfo
+from tkinter.messagebox import showerror, askokcancel
 from os import path
 
 
@@ -12,8 +12,11 @@ import ctypes
 # fixes blurriness
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
-# declare lists
-inputList = []
+# declare thingamabobs
+startingList = []
+listWithoutExtras = []
+
+inputFilePath = ''
 
 
 def load_file(filepath):
@@ -21,34 +24,69 @@ def load_file(filepath):
     global currentTask
     currentTask = 'Loading files...'
     taskLabel.configure(text='Loading files...')
-    specificProgress.configure(mode='indeterminate')
-    specificProgress.start()
     window.update()
 
-    filepath = filepath.replace('\n', '')
+    # the end of the textbox has a newline for some reason, so this takes care of that
+    global inputFilePath
+    inputFilePath = filepath.replace('\n', '')
 
-    print(filepath)
+    if path.exists(inputFilePath):
 
-    if path.exists(filepath):
-
-        with open(filepath, 'r') as file:
-            global inputList
+        with open(inputFilePath, 'r') as file:
+            global startingList
+            startingList = []
             for line in file:
-                # Remove newlines at the same time as adding each line
-                inputList.append(line.replace('\n', ''))
+                startingList.append(line)
                 # print(line)
             file.close()
 
-        specificProgress.stop()
-        specificProgress.configure(mode='determinate')
-        overallProgress['value'] = 10
+        progress['value'] = 2
         return True
 
     else:
-        specificProgress.stop()
-        specificProgress.configure(mode='determinate')
-        specificProgress['value'] = 0
         return False
+
+
+def check_existence_output(folderpath):
+    folderpath = folderpath.replace('\n', '')
+
+    if path.exists(folderpath + '/' + path.basename(inputFilePath)):
+        okay = askokcancel(title='Be careful!', icon='warning',
+                           message='The file' + path.basename(inputFilePath) +
+                                   ' already exists in the selected folder. Continuing will overwrite it.'
+                           )
+        if okay:
+            return True
+        else:
+            return False
+
+    else:
+        return
+
+
+# remove blank lines as well as comment lines, designated by # much like in python
+def first_pass():
+
+    taskLabel.configure(text='Removing non-code lines...')
+    window.update()
+
+    global listWithoutExtras
+    listWithoutExtras = []
+    for i in range(len(startingList)):
+        if not (startingList[i][0] == '#' or startingList[i] == '\n'):
+            listWithoutExtras.append(startingList[i].replace('\n', ''))
+        progress['value'] += 18/len(startingList)
+        # ensures the speed is dictated by the actual algorithm and not the window.update refresh rate XD
+        if i % 25 == 0:
+            window.update()
+    # Update once again in case the program was less than 25 lines long.
+    window.update()
+
+
+# first round of parsing.
+# tokenize each line
+def second_pass():
+    pass
 
 
 def start_system():
@@ -56,16 +94,29 @@ def start_system():
     global currentTask
     currentTask = 'Starting system...'
     taskLabel.configure(background='red', text='Starting system...')
+    progress['value'] = 0
+    startButton.state(['disabled'])
+    inputPathButton.state(['disabled'])
+    outputPathButton.state(['disabled'])
+
     window.update()
 
     input_path = inputPathLabel.get('1.0', 'end')
     if not load_file(input_path):
         showerror('Fatal Error', 'Input file does not exist!')
 
+    output_path = outputPathLabel.get('1.0', 'end')
+    if check_existence_output(output_path):
 
+        # see individual functions for a description of what they do
+        first_pass()
+        second_pass()
 
     currentTask = 'Waiting for user...'
     taskLabel.configure(background='light green', text='Waiting for user...')
+    startButton.state(['!disabled'])
+    inputPathButton.state(['!disabled'])
+    outputPathButton.state(['!disabled'])
 
 
 # initalize main window
@@ -120,16 +171,14 @@ outputArea = ttk.Labelframe(general, text='Output file:')
 outputArea.place(relx=0.01, rely=0.39, relwidth=0.98, height=90)
 
 outputPathLabel = tk.Text(outputArea, background='light gray', font='Helvetica, 11')
-outputPathLabel.insert('1.0', "Please select the output file; it will be overwritten with the program output.")
+outputPathLabel.insert('1.0', "Please select the output directory.")
 outputPathLabel['state'] = 'disabled'
 outputPathLabel.place(relx=0.17, rely=0.05, relwidth=0.81, relheight=0.7)
 
 
 def select_output_file():
-    filetypes = (('text files', '*.txt'), ('TCASM files', '*.tcasm'))
 
-    file = fd.askopenfilename(title='Select the output file:',
-                              initialdir='*/Documents', filetypes=filetypes)
+    file = fd.askdirectory(title='Select the output folder:', initialdir='*/Documents')
     outputPathLabel['state'] = 'normal'
     outputPathLabel.delete("1.0", "end")
     outputPathLabel.insert('1.0', file)
@@ -155,17 +204,15 @@ currentTask = 'Waiting for user...'
 taskLabel = tk.Label(assembleArea, text='Waiting for user...', background='light green', justify=tk.CENTER)
 taskLabel.place(relx=0.6, rely=0.01, relwidth=0.35)
 
-specificProgress = ttk.Progressbar(assembleArea, orient='horizontal', mode='determinate', length=100)
-specificProgress.place(relx=0.02, rely=0.01, relwidth=0.55, relheight=0.35)
+progress = ttk.Progressbar(assembleArea, orient='horizontal', mode='determinate', length=100)
+progress.place(relx=0.02, rely=0.01, relwidth=0.55, relheight=0.35)
 
-overallProgress = ttk.Progressbar(assembleArea, orient='horizontal', mode='determinate', length=100)
-overallProgress.place(relx=0.02, rely=0.5, relwidth=0.55, relheight=0.35)
+timeLabel = ttk.Label(assembleArea, text='Note: expected time to assemble is about 1 second per kb.',
+                      font='Helvetica, 11', foreground='gray')
+timeLabel.place(relx=0.02, rely=0.5)
 
 startButton = ttk.Button(assembleArea, text='Assemble', command=start_system)
-startButton.place(relx=0.6, rely=0.5, relwidth=0.17)
+startButton.place(relx=0.6, rely=0.5, relwidth=0.35)
 
-cancelButton = ttk.Button(assembleArea, text='Cancel')
-cancelButton.state(['disabled'])
-cancelButton.place(relx=0.78, rely=0.5, relwidth=0.17)
 
 window.mainloop()

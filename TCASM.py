@@ -61,7 +61,7 @@ def check_existence_output(folderpath):
             return False
 
     else:
-        return
+        return True
 
 
 # remove blank lines as well as comment lines, designated by # much like in python
@@ -77,14 +77,13 @@ def first_pass():
             listWithoutExtras.append(startingList[i].replace('\n', ''))
         progress['value'] += 18/len(startingList)
         # ensures the speed is dictated by the actual algorithm and not the window.update refresh rate XD
-        if i % 25 == 0:
+        if i % 2 == 0:
             window.update()
     # Update once again in case the program was less than 25 lines long.
     window.update()
 
 
-# first round of parsing.
-# tokenize each line
+# create data block reference, as well as variable lookup table
 def second_pass():
     pass
 
@@ -146,13 +145,13 @@ inputArea = ttk.Labelframe(general, text='Input file:')
 inputArea.place(relx=0.01, rely=0.225, relwidth=0.98, height=90)
 
 inputPathLabel = tk.Text(inputArea, background='light gray', font='Helvetica, 11')
-inputPathLabel.insert('1.0', 'Please select the input file; may be of the .txt or .tcasm filetype.')
+inputPathLabel.insert('1.0', 'Please select the input file.')
 inputPathLabel['state'] = 'disabled'
 inputPathLabel.place(relx=0.17, rely=0.05, relwidth=0.81, relheight=0.7)
 
 
 def select_input_file():
-    filetypes = (('text files', '*.txt'), ('TCASM files', '*.tcasm'))
+    filetypes = (('TCASM files', '*.tcasm'), ('text files', '*.txt'))
 
     file = fd.askopenfilename(title='Select an input file:', initialdir='*/Documents', filetypes=filetypes)
     inputPathLabel['state'] = 'normal'
@@ -171,7 +170,8 @@ outputArea = ttk.Labelframe(general, text='Output file:')
 outputArea.place(relx=0.01, rely=0.39, relwidth=0.98, height=90)
 
 outputPathLabel = tk.Text(outputArea, background='light gray', font='Helvetica, 11')
-outputPathLabel.insert('1.0', "Please select the output directory.")
+outputPathLabel.insert('1.0',
+                       "Please select the output directory.\nIf none is specified, will default to that of the input.")
 outputPathLabel['state'] = 'disabled'
 outputPathLabel.place(relx=0.17, rely=0.05, relwidth=0.81, relheight=0.7)
 
@@ -208,7 +208,7 @@ progress = ttk.Progressbar(assembleArea, orient='horizontal', mode='determinate'
 progress.place(relx=0.02, rely=0.01, relwidth=0.55, relheight=0.35)
 
 timeLabel = ttk.Label(assembleArea, text='Note: expected time to assemble is about 1 second per kb.',
-                      font='Helvetica, 11', foreground='gray')
+                      font='Helvetica, 10', foreground='gray')
 timeLabel.place(relx=0.02, rely=0.5)
 
 startButton = ttk.Button(assembleArea, text='Assemble', command=start_system)

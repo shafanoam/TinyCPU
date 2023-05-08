@@ -1,0 +1,49 @@
+# basic fibinocci program
+
+# initializing the value as zero when none is needed is good practice since you can't assume the location will be empty.
+var num_x 0
+var num_y 1
+
+# used for resetting things (note: data is specified as start_adress_hex, length_in_bytes_decimal)
+data 0xfe0, 2
+0
+1
+
+
+# start by initializing the accumulator with 1
+lda num_y
+
+
+# main sequence
+.mainloop
+
+# output num_x to the hex display
+lda num_x
+sta 0xfff
+
+# prepare to load num_y variable (num_x is already in the acummulator)
+mov a, b
+lda num_y
+
+add b, c
+
+# store new num_x value
+mov a, d
+mov b, a
+sta num_x
+
+# store new num_y value
+mov c, a
+sta num_y
+
+# check the carry flag; if it is under 255 it continues
+snc
+jmp .mainloop
+
+hlt
+# if the clock is restarted, we need to reset the values of x and y back to 0 and 1, respectively.
+# we will use the preset initial values to do this
+lda 0xfe0
+sta num_x
+lda 0xfe1
+sta num_x

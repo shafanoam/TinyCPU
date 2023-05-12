@@ -19,6 +19,8 @@ startingList = []
 listWithoutExtras = []
 varsList = []
 
+registerInstructions = ['mov', 'add', 'sub', 'and', 'or', 'xor', 'shr', 'shl']
+
 # done for error locations
 linesList = []
 
@@ -80,7 +82,7 @@ def gen_empty_hex():
     global finalHexList
     finalHexList = []
     for i in range(0, (2**12 if allowHighMemory.get() == 0 else 2**24)):
-        finalHexList.append(0x00)
+        finalHexList.append('')
 
 
 # remove blank lines as well as comment lines, designated by # much like in python
@@ -121,7 +123,6 @@ def second_pass():
 
     for line in listWithoutExtras:
         lineSplit = str(line).split()
-        print(lineSplit)
         current_instruction = lineSplit[0]
 
         if current_instruction == 'data':
@@ -257,6 +258,87 @@ def second_pass():
     return True
 
 
+# first true assembly pass - generate label table so that
+def third_pass():
+    taskLabel.configure(text='Assembling Instructions...')
+    window.update()
+
+    # used so we know where in the finalHexList to store the data
+    currentMemLocation = 0
+
+    for line in listWithoutExtras:
+        lineSplit = str(line).split()
+        print(lineSplit)
+        current_instruction = lineSplit[0]
+
+        # make sure that memory location is empty - don't be overwriting data and message blocks!
+        if finalHexList[currentMemLocation] == '':
+
+            # register based instructions
+            if current_instruction.lower() in registerInstructions:
+
+                # get register 1
+                if lineSplit[1].lower().rstrip(',') == 'a':
+                    reg_1 = '00'
+                elif lineSplit[1].lower().rstrip(',') == 'b':
+                    reg_1 = '01'
+                elif lineSplit[1].lower().rstrip(',') == 'c':
+                    reg_1 = '10'
+                elif lineSplit[1].lower().rstrip(',') == 'd':
+                    reg_1 = '11'
+                else:
+                    showerror('Register Error', 'Bad register in line ' + str(linesList[listWithoutExtras.index(line)])
+                              + ':\n' + line)
+                    return False
+
+                # register 2 time
+                if lineSplit[2].lower().rstrip(',') == 'a':
+                    reg_2 = '00'
+                elif lineSplit[2].lower().rstrip(',') == 'b':
+                    reg_2 = '01'
+                elif lineSplit[2].lower().rstrip(',') == 'c':
+                    reg_2 = '10'
+                elif lineSplit[2].lower().rstrip(',') == 'd':
+                    reg_2 = '11'
+                else:
+                    showerror('Register Error', 'Bad register in line ' + str(linesList[listWithoutExtras.index(line)])
+                              + ':\n' + line)
+                    return False
+
+                print(reg_1 + reg_2)
+                regcode = hex(int(reg_1 + reg_2, 2)).lstrip('0x')
+                print(regcode)
+
+                if current_instruction.lower() == 'mov':
+                    finalHexList[currentMemLocation] = '0' + regcode
+                elif current_instruction.lower() == 'add':
+                    finalHexList[currentMemLocation] = '1' + regcode
+                elif current_instruction.lower() == 'sub':
+                    finalHexList[currentMemLocation] = '2' + regcode
+                elif current_instruction.lower() == 'and':
+                    finalHexList[currentMemLocation] = '3' + regcode
+                elif current_instruction.lower() == 'or':
+                    finalHexList[currentMemLocation] = '4' + regcode
+                elif current_instruction.lower() == 'xor':
+                    finalHexList[currentMemLocation] = '5' + regcode
+                elif current_instruction.lower() == 'shl':
+                    finalHexList[currentMemLocation] = '6' + regcode
+                elif current_instruction.lower() == 'shr':
+                    finalHexList[currentMemLocation] = '7' + regcode
+
+                currentMemLocation += 1
+
+            # 'skip if !flag' instructions
+            elif current_instruction.lower() == 'snc':
+                finalHexList[currentMemLocation] = 'a0'
+                currentMemLocation += 1
+            elif current_instruction.lower() == 'snz':
+                finalHexList[currentMemLocation] = 'b0'
+                currentMemLocation += 1
+
+    return True
+
+
 def start_system():
 
     global currentTask
@@ -279,7 +361,8 @@ def start_system():
         # see individual functions for a description of what they do
         if first_pass():
             if second_pass():
-                print(finalHexList)
+                if third_pass():
+                    print(finalHexList)
 
     currentTask = 'Waiting for user...'
     taskLabel.configure(background='light green', text='Waiting for user...')

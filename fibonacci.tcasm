@@ -1,14 +1,17 @@
-# basic fibinocci program
+# basic fibonacci program
 
 # initializing the value as zero when none is needed is good practice since you can't assume the location will be empty.
+# note: initial value is in hexadecimal
 var num_x 0
 var num_y 1
 
-# used for resetting things (note: data is specified as start_adress_hex, length_in_bytes_decimal)
-data 0xfe0, 2
+# used for resetting things (note: data is specified as start_address_hex, length_in_bytes_decimal)
+data 0xfc0, 2
 0
 1
 
+
+message 0xfe0 Hi there, my name is Shafanoam!
 
 # start by initializing the accumulator with 1
 lda num_y
@@ -21,7 +24,7 @@ lda num_y
 lda num_x
 sta 0xfff
 
-# prepare to load num_y variable (num_x is already in the acummulator)
+# prepare to load num_y variable (num_x is already in the accumulator)
 mov a, b
 lda num_y
 

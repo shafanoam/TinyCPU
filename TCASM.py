@@ -18,8 +18,12 @@ window = tk.Tk()
 startingList = []
 listWithoutExtras = []
 varsList = []
+labelsList = []
+returnForLabels = []
+returnForVariables = []
 
 registerInstructions = ['mov', 'add', 'sub', 'and', 'or', 'xor', 'shr', 'shl']
+memoryInstructions = ['lda', 'sta', 'jmp', 'cal']
 
 # done for error locations
 linesList = []
@@ -130,8 +134,8 @@ def second_pass():
             try:
                 start_hex = int(lineSplit[1].rstrip(','), base=16)
             except ValueError:
-                showerror('Value Error', 'Bad starting address at line ' + str(linesList[listWithoutExtras.index(line)])
-                          + ':\n' + line)
+                showerror('Address Error', 'Bad starting address at line '
+                          + str(linesList[listWithoutExtras.index(line)]) + ':\n' + line)
                 return False
             try:
                 length_int = int(lineSplit[2])
@@ -181,8 +185,8 @@ def second_pass():
             try:
                 start_hex = int(lineSplit[1].rstrip(','), base=16)
             except ValueError:
-                showerror('Value Error', 'Bad starting address at line ' + str(linesList[listWithoutExtras.index(line)])
-                          + ':\n' + line)
+                showerror('Address Error', 'Bad starting address at line '
+                          + str(linesList[listWithoutExtras.index(line)]) + ':\n' + line)
                 return False
 
             # check for numbers out of range
@@ -258,10 +262,15 @@ def second_pass():
     return True
 
 
-# first true assembly pass - generate label table so that
+# first true assembly pass - also generates label lookup table for use in the next pass
 def third_pass():
     taskLabel.configure(text='Assembling Instructions...')
     window.update()
+
+    global returnForLabels
+    returnForLabels = []
+    global returnForVariables
+    returnForVariables = []
 
     # used so we know where in the finalHexList to store the data
     currentMemLocation = 0
@@ -304,10 +313,7 @@ def third_pass():
                     showerror('Register Error', 'Bad register in line ' + str(linesList[listWithoutExtras.index(line)])
                               + ':\n' + line)
                     return False
-
-                print(reg_1 + reg_2)
                 regcode = hex(int(reg_1 + reg_2, 2)).lstrip('0x')
-                print(regcode)
 
                 if current_instruction.lower() == 'mov':
                     finalHexList[currentMemLocation] = '0' + regcode
@@ -336,6 +342,93 @@ def third_pass():
                 finalHexList[currentMemLocation] = 'b0'
                 currentMemLocation += 1
 
+            # specialty instructions; return from subroutine and halt
+            elif current_instruction.lower() == 'ret':
+                finalHexList[currentMemLocation] = 'e0'
+                currentMemLocation += 1
+            elif current_instruction.lower() == 'hlt':
+                finalHexList[currentMemLocation] = 'f0'
+                currentMemLocation += 1
+
+            elif current_instruction.lower() in memoryInstructions:
+
+                instruction = current_instruction.lower()
+
+                # variable detected - leave empty space for filling in with proper adress later
+                if lineSplit[1][0] == '@':
+                    if instruction == 'lda':
+                        finalHexList[currentMemLocation] = '8'
+                        currentMemLocation += 2
+                    elif instruction == 'sta':
+                        finalHexList[currentMemLocation] = '9'
+                        currentMemLocation += 2
+                    else:
+                        showerror('Instruction Error', "Instructions JMP and CAL currently do not support variables.\n"
+                                  + 'Error located at line '+ str(linesList[listWithoutExtras.index(line)])
+                                  + ':\n' + line)
+                        return False
+
+                    # save location to return there in future with proper address
+                    returnForVariables.append(currentMemLocation - 2)
+                    returnForVariables.append(lineSplit[1].lstrip('@'))
+
+                # label detected - leave empty space for filling in with proper address later
+                elif lineSplit[1][0] == '.':
+                    if instruction == 'lda':
+                        finalHexList[currentMemLocation] = '8'
+                        currentMemLocation += 2
+                    elif instruction == 'sta':
+                        finalHexList[currentMemLocation] = '9'
+                        currentMemLocation += 2
+                    elif instruction == 'jmp':
+                        finalHexList[currentMemLocation] = 'c'
+                        currentMemLocation += 2
+                    elif instruction == 'cal':
+                        finalHexList[currentMemLocation] = 'd'
+                        currentMemLocation += 2
+
+                    # save location to return there in future with proper address
+                    returnForLabels.append(currentMemLocation - 2)
+                    returnForLabels.append(lineSplit[1].lstrip('.'))
+
+                # no variable or label, therefore it must either be an address or was written wrong.
+                else:
+                    # attempt to convert to an integer - if this fails it means something was written wrong.
+                    # KNOWN EDGE CASE!!! # If the variable/label contains, for some godforsaken reason, only hexadecimel
+                    # KNOWN EDGE CASE!!! # numbers and is 3 characters long plus the 0x, then it will pass this test and
+                    # KNOWN EDGE CASE!!! # will be treated as an address if the user forgets to specify via '.' or '@'!!
+
+                    try:
+                        workingAdress = int(lineSplit[1], base=16)
+                    except ValueError:
+                        showerror('Address Error',
+                                  'Bad address at line ' + str(linesList[listWithoutExtras.index(line)])
+                                  + ':\n' + line)
+                        return False
+
+                    workingAdress = lineSplit[1].lstrip('0x')
+
+                    if instruction == 'lda':
+                        finalHexList[currentMemLocation] = '8' + workingAdress[0]
+                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
+                        currentMemLocation += 2
+                    elif instruction == 'sta':
+                        finalHexList[currentMemLocation] = '9' + workingAdress[0]
+                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
+                        currentMemLocation += 2
+                    elif instruction == 'jmp':
+                        finalHexList[currentMemLocation] = 'c' + workingAdress[0]
+                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
+                        currentMemLocation += 2
+                    elif instruction == 'cal':
+                        finalHexList[currentMemLocation] = 'd' + workingAdress[0]
+                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
+                        currentMemLocation += 2
+
+        # in case current adress already has data, say for
+        else:
+            currentMemLocation += 1
+
     return True
 
 
@@ -362,6 +455,8 @@ def start_system():
         if first_pass():
             if second_pass():
                 if third_pass():
+                    print(returnForLabels)
+                    print(returnForVariables)
                     print(finalHexList)
 
     currentTask = 'Waiting for user...'

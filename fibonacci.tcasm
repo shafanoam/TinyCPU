@@ -14,30 +14,30 @@ data 0xfc0, 2
 message 0xfe0 Hi there, my name is Shafanoam!
 
 # start by initializing the accumulator with 1
-lda num_y
+lda @num_y
 
 
 # main sequence
 .mainloop
 
 # output num_x to the hex display
-lda num_x
+lda @num_x
 sta 0xfff
 
 # prepare to load num_y variable (num_x is already in the accumulator)
 mov a, b
-lda num_y
+lda @num_y
 
 add b, c
 
 # store new num_x value
 mov a, d
 mov b, a
-sta num_x
+sta @num_x
 
 # store new num_y value
 mov c, a
-sta num_y
+sta @num_y
 
 # check the carry flag; if it is under 255 it continues
 snc
@@ -47,6 +47,6 @@ hlt
 # if the clock is restarted, we need to reset the values of x and y back to 0 and 1, respectively.
 # we will use the preset initial values to do this
 lda 0xfe0
-sta num_x
+sta @num_x
 lda 0xfe1
-sta num_x
+sta @num_x

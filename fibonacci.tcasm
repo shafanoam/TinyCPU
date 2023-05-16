@@ -11,8 +11,6 @@ data 0xfc0, 2
 1
 
 
-message 0xfe0 Hi there, my name is Shafanoam!
-
 # start by initializing the accumulator with 1
 lda @num_y
 

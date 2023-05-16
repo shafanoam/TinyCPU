@@ -24,11 +24,13 @@ returnForVariables = []
 
 registerInstructions = ['mov', 'add', 'sub', 'and', 'or', 'xor', 'shr', 'shl']
 memoryInstructions = ['lda', 'sta', 'jmp', 'cal']
+currentMemLocation = 0
 
 # done for error locations
 linesList = []
 
 inputFilePath = ''
+folderpath = ''
 
 finalHexList = []
 
@@ -58,20 +60,20 @@ def load_file(filepath):
                 # print(line)
             file.close()
 
-        progress['value'] = 2
         return True
 
     else:
         return False
 
 
-def check_existence_output(folderpath):
-    folderpath = folderpath.replace('\n', '')
+def check_existence_output(folderpath_x):
+    global folderpath
+    folderpath = folderpath_x.replace('\n', '')
 
-    if path.exists(folderpath + '/' + path.basename(inputFilePath)):
+    if path.exists(folderpath + '/' + path.basename(inputFilePath).rstrip('.tcasm') + '.txt'):
         okay = askokcancel(title='Be careful!', icon='warning',
-                           message='The file' + path.basename(inputFilePath) +
-                                   ' already exists in the selected folder. Continuing will overwrite it.'
+                           message='The file' + path.basename(inputFilePath).rstrip('.tcasm') +
+                                   '.txt already exists in the selected folder. Continuing will overwrite it.'
                            )
         if okay:
             return True
@@ -259,6 +261,9 @@ def second_pass():
         else:
             progress['value'] += 30 / len(startingList)
             window.update()
+
+    progress['value'] = 30
+    window.update()
     return True
 
 
@@ -267,12 +272,15 @@ def third_pass():
     taskLabel.configure(text='Assembling Instructions...')
     window.update()
 
+    global labelsList
+    labelsList = []
     global returnForLabels
     returnForLabels = []
     global returnForVariables
     returnForVariables = []
 
     # used so we know where in the finalHexList to store the data
+    global currentMemLocation
     currentMemLocation = 0
 
     for line in listWithoutExtras:
@@ -364,7 +372,7 @@ def third_pass():
                         currentMemLocation += 2
                     else:
                         showerror('Instruction Error', "Instructions JMP and CAL currently do not support variables.\n"
-                                  + 'Error located at line '+ str(linesList[listWithoutExtras.index(line)])
+                                  + 'Error located at line ' + str(linesList[listWithoutExtras.index(line)])
                                   + ':\n' + line)
                         return False
 
@@ -425,11 +433,119 @@ def third_pass():
                         finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
                         currentMemLocation += 2
 
-        # in case current adress already has data, say for
+            # check for label
+            if current_instruction.lower()[0] == '.':
+                labelsList.append(current_instruction.lstrip('.'))
+                labelsList.append(currentMemLocation)
+                # don't increment currentMemLocation as the label doesn't actually exist in memory, it's a placeholder
+
+        # in case current address already has data, say for
         else:
             currentMemLocation += 1
 
+        progress['value'] += 60 / len(listWithoutExtras)
+        window.update()
+
     return True
+
+
+# Set variable memory locations - change initial value to memory location
+def fourth_pass():
+    taskLabel.configure(text='Infusing variables and labels...')
+    window.update()
+
+    varsLeft = len(returnForVariables) / 2
+    global currentMemLocation
+    start_hex = currentMemLocation
+
+    for iteration in range(int(len(varsList) / 2)):  # don't question the redundant int(). The code breaks without it.
+        while not finalHexList[currentMemLocation] == '':
+            currentMemLocation += 1
+        finalHexList[currentMemLocation] = varsList[iteration * 2 + 1]
+        varsList[iteration * 2 + 1] = currentMemLocation
+
+    for i in range(int(varsLeft)):
+        workingAddress = returnForVariables[i * 2]
+
+        # separate into digits
+
+        finalHexList[workingAddress + 1] = hex(
+            varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')
+
+        # add the zero if need be
+        if len(hex(varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')) == 1:
+            finalHexList[workingAddress + 1] = '0' + str(finalHexList[workingAddress + 1])
+
+        # if the length of the hexadecimal digit is three, then the high digit needs to be combined with the opcode
+        if len(hex(varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')) == 3:
+            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + hex(
+                varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')
+        else:
+            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + '0'
+
+    return True
+
+# final actual pass -
+def fifth_pass():
+
+    labelsLeft = len(returnForLabels) / 2
+
+    for iteration in range(int(len(returnForLabels) / 2)):
+
+        workingAddress = returnForLabels[iteration * 2]
+
+        # separate into digits
+
+        finalHexList[workingAddress + 1] = hex(
+            labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')
+
+        # add the zero if need be
+        if len(hex(labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')) == 1:
+            finalHexList[workingAddress + 1] = '0' + str(finalHexList[workingAddress + 1])
+
+        # if the length of the hexadecimal digit is three, then the high digit needs to be combined with the opcode
+        if len(hex(labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')) == 3:
+            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + hex(
+                labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')
+        else:
+            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + '0'
+
+    return True
+
+
+def output_logisim():
+    taskLabel.configure(text='Outputting...')
+    window.update()
+
+    with open(folderpath + '/' + path.basename(inputFilePath).rstrip('.tcasm') + '.txt', 'w') as file:
+
+        file.write('v3.0 hex bytes plain big-endian\n')
+        for i in range(len(finalHexList)):
+            if not finalHexList[i] == '':
+                file.write(finalHexList[i])
+            else:
+                file.write('00')
+            progress['value'] += 10 / len(finalHexList)
+
+        file.close()
+
+
+def output_ascii():
+    taskLabel.configure(text='Outputting...')
+    window.update()
+
+    with open(folderpath + '/' + path.basename(inputFilePath).rstrip('.tcasm') + '.txt', 'w') as file:
+
+        file.write('Copy the contents below and paste into your serial terminal of choice:\n')
+        for i in range(len(finalHexList)):
+            if not finalHexList[i] == '':
+                byte_array = bytearray.fromhex(finalHexList[i])
+                file.write(byte_array.decode(encoding='ascii'))
+            else:
+                file.write((bytearray.fromhex('00')).decode())
+            progress['value'] += 10 / len(finalHexList)
+
+        file.close()
 
 
 def start_system():
@@ -455,9 +571,15 @@ def start_system():
         if first_pass():
             if second_pass():
                 if third_pass():
-                    print(returnForLabels)
-                    print(returnForVariables)
-                    print(finalHexList)
+                    if fourth_pass():
+                        if fifth_pass():
+                            if outputFormat.get() == 'Logisim v3.0 hex bytes plain big-endian':
+                                output_logisim()
+                            elif outputFormat.get() == 'Ascii Hex for UART data transfer':
+                                # output_ascii()
+                                pass
+                            else:
+                                showerror('Output Error', 'Please specify an output format.')
 
     currentTask = 'Waiting for user...'
     taskLabel.configure(background='light green', text='Waiting for user...')
@@ -544,6 +666,14 @@ optionsArea.place(relx=0.01, rely=0.555, relwidth=0.98, height=120)
 allowMemOver = ttk.Checkbutton(optionsArea, text='Allow memory use over than 0xfff (max 0xffffff)',
                                variable=allowHighMemory)
 allowMemOver.place(relx=0.01, rely=0.01)
+
+outputFormat = tk.StringVar()
+outForm = ttk.Combobox(optionsArea, textvariable=outputFormat)
+outForm['values'] = ['Logisim v3.0 hex bytes plain big-endian', 'Ascii Hex for UART data transfer']
+outForm['state'] = 'readonly'
+outForm.place(relx=0.625, rely=0.6, relwidth=0.325)
+outFormLabel = ttk.Label(optionsArea, text='Output format:')
+outFormLabel.place(relx=0.5, rely=0.6)
 
 # assemble area
 assembleArea = ttk.Labelframe(general, text='Assemble:')

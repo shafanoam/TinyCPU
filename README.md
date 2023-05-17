@@ -1,5 +1,5 @@
 # TinyCPU
-A custom CPU and assembler created for an FPGA project in my Digital Electronics class.
+A custom CPU and assembler I created for the Basys 3 FPGA board as a fun practical application of my CPU designing knowladge.
 
 ## Hardware Description:
 For those who will like run their code, a Logisim implementation of the CPU is provided.

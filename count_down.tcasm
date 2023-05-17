@@ -1,0 +1,22 @@
+data 0x120 1
+1
+
+var start 5
+
+lda 0x120
+mov a, b
+lda
+
+.loop
+sta 0xfff
+sub b, a
+
+
+snz
+jmp .end
+
+jmp .loop
+
+.end
+sta 0xfff
+hlt

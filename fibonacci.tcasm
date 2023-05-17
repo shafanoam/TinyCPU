@@ -39,8 +39,10 @@ sta @num_y
 
 # check the carry flag; if it is under 255 it continues
 snc
+jmp .end
 jmp .mainloop
 
+.end
 hlt
 # if the clock is restarted, we need to reset the values of x and y back to 0 and 1, respectively.
 # we will use the preset initial values to do this

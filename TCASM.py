@@ -57,7 +57,6 @@ def load_file(filepath):
             startingList = []
             for line in file:
                 startingList.append(line)
-                # print(line)
             file.close()
 
         return True
@@ -285,7 +284,6 @@ def third_pass():
 
     for line in listWithoutExtras:
         lineSplit = str(line).split()
-        print(lineSplit)
         current_instruction = lineSplit[0]
 
         # make sure that memory location is empty - don't be overwriting data and message blocks!
@@ -321,7 +319,7 @@ def third_pass():
                     showerror('Register Error', 'Bad register in line ' + str(linesList[listWithoutExtras.index(line)])
                               + ':\n' + line)
                     return False
-                regcode = hex(int(reg_1 + reg_2, 2)).lstrip('0x')
+                regcode = hex(int(reg_1 + reg_2, 2)).lstrip('0x') if int(reg_1 + reg_2, 2) != 0 else '0'
 
                 if current_instruction.lower() == 'mov':
                     finalHexList[currentMemLocation] = '0' + regcode
@@ -521,7 +519,7 @@ def output_logisim():
 
         file.write('v3.0 hex bytes plain big-endian\n')
         for i in range(len(finalHexList)):
-            if not finalHexList[i] == '':
+            if finalHexList[i] != '':
                 file.write(finalHexList[i])
             else:
                 file.write('00')
@@ -580,6 +578,7 @@ def start_system():
                                 pass
                             else:
                                 showerror('Output Error', 'Please specify an output format.')
+                            print(finalHexList)
 
     currentTask = 'Waiting for user...'
     taskLabel.configure(background='light green', text='Waiting for user...')

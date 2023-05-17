@@ -1,0 +1,24 @@
+# used for resetting things (note: data is specified as start_address_hex, length_in_bytes_decimal)
+data 0x120, 2
+0
+1
+
+
+# load initial values
+.reset
+lda 0x120
+mov a, b
+lda 0x120
+sta 0xfff
+
+# main loop
+.loop
+# print to screen
+mov a, c
+mov b, a
+mov c, b
+add b, a
+sta 0xfff
+snc
+jmp .reset
+jmp .loop

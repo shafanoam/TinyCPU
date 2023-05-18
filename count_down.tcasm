@@ -1,11 +1,12 @@
 data 0x120 1
 1
 
-var start 5
+var start 15
 
+.start
 lda 0x120
 mov a, b
-lda
+lda @start
 
 .loop
 sta 0xfff
@@ -18,5 +19,7 @@ jmp .end
 jmp .loop
 
 .end
+mov a, a
 sta 0xfff
 hlt
+jmp .start

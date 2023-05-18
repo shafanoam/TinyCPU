@@ -284,6 +284,7 @@ def third_pass():
 
     for line in listWithoutExtras:
         lineSplit = str(line).split()
+        print(lineSplit)
         current_instruction = lineSplit[0]
 
         # make sure that memory location is empty - don't be overwriting data and message blocks!
@@ -520,7 +521,7 @@ def output_logisim():
         file.write('v3.0 hex bytes plain big-endian\n')
         for i in range(len(finalHexList)):
             if finalHexList[i] != '':
-                file.write(finalHexList[i])
+                file.write(('0' + finalHexList[i]) if len(finalHexList[i]) == 1 else finalHexList[i])
             else:
                 file.write('00')
             progress['value'] += 10 / len(finalHexList)

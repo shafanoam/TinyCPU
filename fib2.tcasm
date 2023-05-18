@@ -8,7 +8,7 @@ data 0x120, 2
 .reset
 lda 0x120
 mov a, b
-lda 0x120
+lda 0x121
 sta 0xfff
 
 # main loop

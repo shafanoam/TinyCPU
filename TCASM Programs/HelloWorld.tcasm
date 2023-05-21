@@ -1,0 +1,47 @@
+# Hello world program :D
+
+message 0xf10 Hello, world!
+
+data 0xf00 3
+# length of message + 1
+0e
+01
+# starting address
+10
+
+
+lda 0xf00
+mov a, b
+lda 0xf01
+mov a, c
+# now have length of message in b, and 01 in c for subtraction
+
+.mainLoop
+
+# start address to a
+lda 0xf02
+
+# storing it where the lower 8 bits in the load character will be
+sta 0x00c
+# store in D for diagnostics, remove when no longer needed
+mov a, d
+#following load is at address 0x00b and 0x00c; it loads the current character
+lda 0xf00
+sta 0xffd
+
+# Add one value to address then store for later use
+mov d, a
+add c, a
+sta 0xf02
+
+# subtract 1 from b, if it's now zero then jump to end and halt
+mov b, a
+sub c, a
+mov a, b
+snz
+jmp .end
+jmp .mainLoop
+
+
+.end
+hlt

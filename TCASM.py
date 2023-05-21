@@ -406,31 +406,41 @@ def third_pass():
                     # KNOWN EDGE CASE!!! # will be treated as an address if the user forgets to specify via '.' or '@'!!
 
                     try:
-                        workingAdress = int(lineSplit[1], base=16)
+                        workingAddress = int(lineSplit[1], base=16)
                     except ValueError:
                         showerror('Address Error',
                                   'Bad address at line ' + str(linesList[listWithoutExtras.index(line)])
                                   + ':\n' + line)
                         return False
 
-                    workingAdress = lineSplit[1].lstrip('0x')
+                    workingAddress = lineSplit[1].lstrip('0x')
+                    # make sure it's the correct length
+                    if len(workingAddress) == 1:
+                        workingAddress = '00' + workingAddress
+                    elif len(workingAddress) == 2:
+                        workingAddress = '0' + workingAddress
+                    print(workingAddress)
 
-                    if instruction == 'lda':
-                        finalHexList[currentMemLocation] = '8' + workingAdress[0]
-                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
-                        currentMemLocation += 2
-                    elif instruction == 'sta':
-                        finalHexList[currentMemLocation] = '9' + workingAdress[0]
-                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
-                        currentMemLocation += 2
-                    elif instruction == 'jmp':
-                        finalHexList[currentMemLocation] = 'c' + workingAdress[0]
-                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
-                        currentMemLocation += 2
-                    elif instruction == 'cal':
-                        finalHexList[currentMemLocation] = 'd' + workingAdress[0]
-                        finalHexList[currentMemLocation + 1] = workingAdress[1] + workingAdress[2]
-                        currentMemLocation += 2
+                    try:
+                        if instruction == 'lda':
+                            finalHexList[currentMemLocation] = '8' + workingAddress[0]
+                            finalHexList[currentMemLocation + 1] = workingAddress[1] + workingAddress[2]
+                            currentMemLocation += 2
+                        elif instruction == 'sta':
+                            finalHexList[currentMemLocation] = '9' + workingAddress[0]
+                            finalHexList[currentMemLocation + 1] = workingAddress[1] + workingAddress[2]
+                            currentMemLocation += 2
+                        elif instruction == 'jmp':
+                            finalHexList[currentMemLocation] = 'c' + workingAddress[0]
+                            finalHexList[currentMemLocation + 1] = workingAddress[1] + workingAddress[2]
+                            currentMemLocation += 2
+                        elif instruction == 'cal':
+                            finalHexList[currentMemLocation] = 'd' + workingAddress[0]
+                            finalHexList[currentMemLocation + 1] = workingAddress[1] + workingAddress[2]
+                            currentMemLocation += 2
+                    except IndexError as error:
+                        showerror('Index Error', 'Error at line ' + str(linesList[listWithoutExtras.index(line)])
+                                  + ':\n' + str(error))
 
             # check for label
             if current_instruction.lower()[0] == '.':
@@ -484,6 +494,7 @@ def fourth_pass():
 
     return True
 
+
 # final actual pass -
 def fifth_pass():
 
@@ -494,20 +505,23 @@ def fifth_pass():
         workingAddress = returnForLabels[iteration * 2]
 
         # separate into digits
-
-        finalHexList[workingAddress + 1] = hex(
-            labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')
-
-        # add the zero if need be
-        if len(hex(labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')) == 1:
-            finalHexList[workingAddress + 1] = '0' + str(finalHexList[workingAddress + 1])
-
-        # if the length of the hexadecimal digit is three, then the high digit needs to be combined with the opcode
-        if len(hex(labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')) == 3:
-            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + hex(
+        try:
+            finalHexList[workingAddress + 1] = hex(
                 labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')
-        else:
-            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + '0'
+
+            # add the zero if need be
+            if len(hex(labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')) == 1:
+                finalHexList[workingAddress + 1] = '0' + str(finalHexList[workingAddress + 1])
+
+            # if the length of the hexadecimal digit is three, then the high digit needs to be combined with the opcode
+            if len(hex(labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')) == 3:
+                finalHexList[workingAddress] = str(finalHexList[workingAddress]) + hex(
+                    labelsList[labelsList.index(returnForLabels[iteration * 2 + 1]) + 1]).lstrip('0x')
+            else:
+                finalHexList[workingAddress] = str(finalHexList[workingAddress]) + '0'
+        except ValueError:
+            showerror('Label Error', 'Label not indexed: ' + returnForLabels[iteration * 2 + 1])
+            return False
 
     return True
 

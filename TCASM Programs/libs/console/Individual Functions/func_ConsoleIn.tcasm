@@ -1,0 +1,29 @@
+# CONSOLE OUTPUT FUNCTION
+# FOR USE IN CONSOLE LIBRARY
+#
+# Takes a message of any length up to 32 characters that stores at 0xfxx, end is indicated by the ascii for 'enter'
+#
+# Preserves no registers.
+#
+# It assumes the following variables:
+# storeAddress      set to the starting location and will be modified by the function
+# messageLength	    will be modified to the length of the message
+# one               a variable that should already exist by common sense, obviously always set to 1
+# thirtyTwo         set to 0x20
+#
+# TO USE:
+# cal .cin
+
+
+# ### Console Input Function
+.cin
+
+# initial setup
+lda @one
+mov a, c
+lda @messageLength
+mov a, d
+sub d, d
+# now have length of message at 0 in d and 01 in c
+
+.cin_standard_loop

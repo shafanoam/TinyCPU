@@ -1,38 +1,38 @@
 # Hello world program :D
 
-message 0xf10 Hello, world!
+message 0xe10 Hello, world!
 
-data 0xf00 3
-# length of message + 1
-0e
-01
-# starting address
-10
+var messageLength 14
+
+var one 1
+
+# start address here is 0x(x)10, and 10 hex is 16 decimal
+var charAddress 16
 
 
-lda 0xf00
+lda @messageLength
 mov a, b
-lda 0xf01
+lda @one
 mov a, c
 # now have length of message in b, and 01 in c for subtraction
 
 .mainLoop
 
 # start address to a
-lda 0xf02
+lda @charAddress
 
 # storing it where the lower 8 bits in the load character will be
 sta 0x00c
 # store in D for diagnostics, remove when no longer needed
 mov a, d
 #following load is at address 0x00b and 0x00c; it loads the current character
-lda 0xf00
+lda 0xe00
 sta 0xffd
 
 # Add one value to address then store for later use
 mov d, a
 add c, a
-sta 0xf02
+sta @charAddress
 
 # subtract 1 from b, if it's now zero then jump to end and halt
 mov b, a

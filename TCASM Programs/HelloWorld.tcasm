@@ -22,10 +22,11 @@ mov a, c
 lda @charAddress
 
 # storing it where the lower 8 bits in the load character will be
-sta 0x00c
+sta .loadlocation
 # store in D for diagnostics, remove when no longer needed
 mov a, d
 #following load is at address 0x00b and 0x00c; it loads the current character
+..loadlocation
 lda 0xe00
 sta 0xffd
 

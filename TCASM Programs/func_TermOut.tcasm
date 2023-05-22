@@ -1,0 +1,24 @@
+# CONSOLE OUTPUT FUNCTION
+# FOR USE IN CONSOLE LIBRARY
+#
+# Takes any message of any length that starts at 0xexx
+#
+# Only preserves D register
+#
+# It assumes the following variables:
+# charAddress       set to the starting location is and will be modified by the function
+# messageLength     set to the length of the message
+# one               a variable that should already exist by common sense, obviously always set to 1
+#
+# to use it use CAL .cout
+
+
+.cout
+
+# initial setup
+lda @messageLength
+mov a, b
+lda @one
+mov a, c
+# now have length of message in b, and 01 in c for subtraction
+

@@ -1,16 +1,16 @@
-data 0x120 1
-1
+var one 1
 
 var start 15
 
 .start
-lda 0x120
+lda @one
 mov a, b
 lda @start
+sta 0xfff
 
 .loop
-sta 0xfff
 sub b, a
+sta 0xfff
 
 
 snz
@@ -19,7 +19,7 @@ jmp .end
 jmp .loop
 
 .end
-mov a, a
-sta 0xfff
+sub b, a
+sta 0xfff	
 hlt
 jmp .start

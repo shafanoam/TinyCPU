@@ -3,18 +3,24 @@
 message 0xe10 Hello, world!
 
 var messageLength 14
+var startAddress 16
 
 var one 1
+var ascii_enter 10
 
 # start address here is 0x(x)10, and 10 hex is 16 decimal
-var charAddress 16
+var charAddress 0
 
+
+.setup
 
 lda @messageLength
 mov a, b
 lda @one
 mov a, c
-# now have length of message in b, and 01 in c for subtraction
+lda @startAddress
+sta @charAddress
+# now have start address in a, length of message in b, and 01 in c for subtraction
 
 .mainLoop
 
@@ -25,7 +31,7 @@ lda @charAddress
 sta .loadlocation
 # store in D for diagnostics, remove when no longer needed
 mov a, d
-#following load is at address 0x00b and 0x00c; it loads the current character
+#following loads the current character
 ..loadlocation
 lda 0xe00
 sta 0xffd
@@ -45,4 +51,7 @@ jmp .mainLoop
 
 
 .end
+lda @ascii_enter
+sta 0xffd
 hlt
+jmp .setup

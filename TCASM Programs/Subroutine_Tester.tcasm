@@ -1,0 +1,6 @@
+.loop
+lda 0xffe
+add a, a
+snz
+cal .loop
+ret

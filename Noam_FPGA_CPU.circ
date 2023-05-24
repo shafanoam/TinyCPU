@@ -714,12 +714,12 @@ end TCL_Generic;&#13;
 8020210a 4*0 8008000 10004000 1284 8020210a 4*0 8008000
 10004000 1294 8020210a 4*0 8008000 10004000 12a4 8020210a
 4*0 8008000 10004000 12d4 8020200a 4*0 8008000 10004000
-12e4 8020200a 4*0 8008000 10004000 10200800 8008000 12800000
-1800400 c000000 90200001 8008000 10004000 10200800 8008000 12800000
-1800400 c000000 a0200004 8008000 10004000 20000 20000 80200000
+12e4 8020200a 4*0 8008000 10004000 10200800 9808400 12800000
+c000000 90200001 0 8008000 10004000 10200800 9808400 12800000
+c000000 a0200004 0 8008000 10004000 20000 20000 80200000
 0 0 0 8008000 10004000 10000 10000 80200000
-0 0 0 8008000 10004000 10000800 200000 8008000
-12000000 81000400 0 8008000 10004000 6*0 8008000 10004000
+0 0 0 8008000 10004000 10200800 8008000 12000000
+81000400 0 0 8008000 10004000 6*0 8008000 10004000
 6*0 8008000 10004000 c0200000
 </a>
       <a name="dataWidth" val="32"/>
@@ -749,7 +749,7 @@ end TCL_Generic;&#13;
       <a name="rows" val="16"/>
     </comp>
     <comp lib="5" loc="(3950,380)" name="DipSwitch">
-      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@737c795"/>
+      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@5f190b96"/>
       <a name="facing" val="south"/>
       <a name="label" val="Main_Switches"/>
       <a name="labelvisible" val="false"/>
@@ -757,15 +757,15 @@ end TCL_Generic;&#13;
     </comp>
     <comp lib="5" loc="(3990,400)" name="Keyboard"/>
     <comp lib="5" loc="(4030,330)" name="Hex Digit Display">
-      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@4ac3f501"/>
+      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@c7a63a"/>
       <a name="label" val="Hex_Digit_Display_2"/>
     </comp>
     <comp lib="5" loc="(4050,1240)" name="Hex Digit Display">
-      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@7fe702d1"/>
+      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@edd9de4"/>
       <a name="label" val="Hex_Digit_Display_1"/>
     </comp>
     <comp lib="5" loc="(4070,330)" name="Hex Digit Display">
-      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@a448c8f"/>
+      <a name="Dummy" val="com.cburch.logisim.fpga.data.ComponentMapInformationContainer@5e89eda1"/>
       <a name="label" val="Hex_Digit_Display_3"/>
     </comp>
     <comp lib="5" loc="(4230,380)" name="Button">

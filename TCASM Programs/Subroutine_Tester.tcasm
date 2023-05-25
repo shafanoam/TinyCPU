@@ -1,6 +1,12 @@
 .loop
 lda 0xffe
 add a, a
+
 snz
-cal .loop
+jmp .loop
+cal .out
+jmp .loop
+
+.out
+sta 0xfff
 ret

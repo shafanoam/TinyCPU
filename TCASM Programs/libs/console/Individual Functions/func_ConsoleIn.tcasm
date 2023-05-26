@@ -1,7 +1,7 @@
 # CONSOLE OUTPUT FUNCTION
 # FOR USE IN CONSOLE LIBRARY
 #
-# Takes a message of any length up to 32 characters that stores at 0xfxx, end is indicated by the ascii for 'enter'
+# Takes a message of any length up to 32 characters that stores at 0xexx, end is indicated by the ascii for 'enter'
 #
 # Preserves no registers.
 #
@@ -10,9 +10,27 @@
 # messageLength	    will be modified to the length of the message
 # one               a variable that should already exist by common sense, obviously always set to 1
 # thirtyTwo         set to 0x20
+# ascii_enter       set to 0x0a
+# cin_current_char  temporary, used to store current ascii character
 #
 # TO USE:
 # cal .cin
+
+var storeAddress 00
+var messageLength 0
+var one 1
+var thirtyTwo 32
+var ascii_enter 10
+var cin_current_char 0
+
+data 0xf00 1
+ab
+
+cal .cin
+lda 0xf00
+sta 0xfff
+.end
+jmp .end
 
 
 # ### Console Input Function
@@ -22,8 +40,54 @@
 lda @one
 mov a, c
 lda @messageLength
-mov a, d
+mov a, b
 sub d, d
-# now have length of message at 0 in d and 01 in c
+# now have length of message at 0 in b and 01 in c
+
 
 .cin_standard_loop
+
+# start address to a
+lda @storeAddress
+
+# storing it where the lower 8 bits in the store character will be
+sta .storelocation_for_cin
+
+
+# halt and wait for character input
+hlt
+
+# add 1 to storeAddress and store for later
+add c, a
+sta @storeAddress
+
+
+# once input is detected:
+lda 0xffc
+
+
+# store for comparison to ascii_enter
+mov a, d
+
+# check if enter; therefore it's finished
+lda @ascii_enter
+sub d, a
+
+# if zero then match, so return else continue
+snz
+ret
+# for alignment purposes, effectively a NOP
+mov a, a
+
+
+# if not enter, continue:
+
+# restore current char and store in the variable place
+mov d, a
+..storelocation_for_cin
+sta 0xe00
+
+lda @storeAddress
+sta 0xfff
+
+jmp .cin_standard_loop

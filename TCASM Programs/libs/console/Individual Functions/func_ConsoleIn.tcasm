@@ -1,27 +1,31 @@
 # CONSOLE OUTPUT FUNCTION
 # FOR USE IN CONSOLE LIBRARY
 #
-# Takes a message of any length up to 32 characters that stores at 0xexx, end is indicated by the ascii for 'enter'
+# Takes a message of any length up to 32 characters that stores at 0xe00, end is indicated by 'enter'
 #
 # Preserves no registers.
 #
 # It assumes the following variables:
-# storeAddress      set to the starting location and will be modified by the function
 # messageLength	    will be modified to the length of the message
 # one               a variable that should already exist by common sense, obviously always set to 1
 # thirtyTwo         set to 0x20
 # ascii_enter       set to 0x0a
+# ascii_backspace   set to 0x08
 # cin_current_char  temporary, used to store current ascii character
+# cin_chars_left    temporary, used to know if max limit of 32 chars is reached
+# cin_address       set to the starting location and will be modified by the function
 #
 # TO USE:
 # cal .cin
 
-var storeAddress 00
 var messageLength 0
 var one 1
 var thirtyTwo 32
 var ascii_enter 10
+var ascii_backspace 08
 var cin_current_char 0
+var cin_chars_left 0
+var cin_address 0
 
 data 0xf00 1
 ab
@@ -37,18 +41,29 @@ jmp .end
 .cin
 
 # initial setup
+
+# setup cin_chars_left to be -32 so that adding 1 per character sets the zero flag once the limit is reached
+lda @thirtyTwo
+mov a, b
+sub b, a
+sub b, a
+mov a, b
+# sta 0xfff
+
 lda @one
 mov a, c
-lda @messageLength
-mov a, b
-sub d, d
-# now have length of message at 0 in b and 01 in c
+
+lda @cin_address
+sub a, a
+sta @cin_address
+
+# now have cin_chars_left at -32 in b and 01 in c, and cin_address is set to 0
 
 
 .cin_standard_loop
 
 # start address to a
-lda @storeAddress
+lda @cin_address
 
 # storing it where the lower 8 bits in the store character will be
 sta .storelocation_for_cin
@@ -57,16 +72,16 @@ sta .storelocation_for_cin
 # halt and wait for character input
 hlt
 
-# add 1 to storeAddress and store for later
+# add 1 to cin_address and store for later
 add c, a
-sta @storeAddress
+sta @cin_address
 
 
 # once input is detected:
 lda 0xffc
 
 
-# store for comparison to ascii_enter
+# store for comparison to ascii_enter and ascii_backspace
 mov a, d
 
 # check if enter; therefore it's finished
@@ -79,15 +94,65 @@ ret
 # for alignment purposes, effectively a NOP
 mov a, a
 
+# check if backspace; therefore remove the last character
+lda @ascii_backspace
+sub d, a
 
-# if not enter, continue:
+# if zero then match, so return else continue
+snz
+jmp .cin_deal_with_backspaces
+
+
+# if not enter or backspace, continue:
 
 # restore current char and store in the variable place
 mov d, a
 ..storelocation_for_cin
 sta 0xe00
+# also output to screen lol
+sta 0xffd
 
-lda @storeAddress
+# add one to the chars left, if the carry flag has been set then the 32 char limit has been reached and we can return.
+mov b, a
+add c, b
+snc
+ret
+# for alignment purposes, effectively a NOP
+mov a, a
+
+mov b, a
 sta 0xfff
+
+jmp .cin_standard_loop
+
+
+.cin_deal_with_backspaces
+
+lda @cin_address
+# subtract here in addition to later b/c there's an automatic increment we have to account for
+sub c, a
+sta @cin_address
+
+
+# double check that message length isn't already at zero
+lda @thirtyTwo
+add b, a
+sta 0xfff
+snz
+jmp .cin_standard_loop
+
+.cin_deal_with_backspaces_continue
+mov b, a
+sub c, b
+
+lda @cin_address
+sub c, a
+sta @cin_address
+sta 0xfff
+
+mov d, a
+sta 0xffd
+# mov b, a
+# sta 0xfff
 
 jmp .cin_standard_loop

@@ -11,8 +11,6 @@
 # thirtyTwo         set to 0x20
 # ascii_enter       set to 0x0a
 # ascii_backspace   set to 0x08
-# cin_current_char  temporary, used to store current ascii character
-# cin_chars_left    temporary, used to know if max limit of 32 chars is reached
 # cin_address       set to the starting location and will be modified by the function
 #
 # TO USE:
@@ -23,16 +21,10 @@ var one 1
 var thirtyTwo 32
 var ascii_enter 10
 var ascii_backspace 08
-var cin_current_char 0
-var cin_chars_left 0
 var cin_address 0
 
-data 0xf00 1
-ab
 
 cal .cin
-lda 0xf00
-sta 0xfff
 .end
 jmp .end
 
@@ -42,13 +34,12 @@ jmp .end
 
 # initial setup
 
-# setup cin_chars_left to be -32 so that adding 1 per character sets the zero flag once the limit is reached
+# setup chars_left to be -32 so that adding 1 per character sets the zero flag once the limit is reached
 lda @thirtyTwo
 mov a, b
 sub b, a
 sub b, a
 mov a, b
-# sta 0xfff
 
 lda @one
 mov a, c
@@ -57,7 +48,7 @@ lda @cin_address
 sub a, a
 sta @cin_address
 
-# now have cin_chars_left at -32 in b and 01 in c, and cin_address is set to 0
+# now have chars_left at -32 in b and 01 in c, and cin_address is set to 0
 
 
 .cin_standard_loop
@@ -90,9 +81,7 @@ sub d, a
 
 # if zero then match, so return else continue
 snz
-ret
-# for alignment purposes, effectively a NOP
-mov a, a
+jmp .cin_end
 
 # check if backspace; therefore remove the last character
 lda @ascii_backspace
@@ -116,12 +105,7 @@ sta 0xffd
 mov b, a
 add c, b
 snc
-ret
-# for alignment purposes, effectively a NOP
-mov a, a
-
-mov b, a
-sta 0xfff
+jmp .cin_end
 
 jmp .cin_standard_loop
 
@@ -137,7 +121,6 @@ sta @cin_address
 # double check that message length isn't already at zero
 lda @thirtyTwo
 add b, a
-sta 0xfff
 snz
 jmp .cin_standard_loop
 
@@ -148,11 +131,15 @@ sub c, b
 lda @cin_address
 sub c, a
 sta @cin_address
-sta 0xfff
 
 mov d, a
 sta 0xffd
-# mov b, a
-# sta 0xfff
 
 jmp .cin_standard_loop
+
+.cin_end
+# make sure to save message_length for future use
+lda @thirtyTwo
+add b, a
+sta @messageLength
+ret

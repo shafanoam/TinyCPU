@@ -1,6 +1,6 @@
-# ################ CONSOLE LIBRARY!
-# ################ Console input and output.
-# ################
+# ################  CONSOLE LIBRARY!
+# ################  Console input and output.
+# ################  Created for the TinyCPU architecture
 
 # ### Console Output Function
 # Takes any message of any length that starts at 0xexx

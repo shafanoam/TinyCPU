@@ -1,0 +1,187 @@
+# ################ CONSOLE LIBRARY!
+# ################ Console input and output.
+# ################
+
+# ### Console Output Function
+# Takes any message of any length that starts at 0xexx
+# Preserves no registers.
+# It assumes the following variables:
+# charAddress       set to the starting location is and will be modified by the function
+# messageLength     set to the length of the message
+# one               a variable that should already exist by common sense, obviously always set to 1
+# TO USE:
+# cal .cout
+
+# ### Console Input Function
+# Takes a message of any length up to 32 characters and stores at 0xe00, end is indicated by 'enter'
+# Preserves no registers.
+# It assumes the following variables:
+# messageLength	    will be modified to the length of the message
+# one               a variable that should already exist by common sense, obviously always set to 1
+# thirtyTwo         set to 0x20
+# ascii_enter       set to 0x0a
+# ascii_backspace   set to 0x08
+# cin_address       set to the starting location and will be modified by the function
+# TO USE:
+# cal .cin
+
+
+
+# ### Console Out Function
+.cout
+
+# initial setup
+lda @messageLength
+mov a, b
+lda @one
+mov a, c
+# now have length of message in b, and 01 in c for subtraction
+
+.cout_standard_loop
+
+# start address to a
+lda @charAddress
+
+# storing it where the lower 8 bits in the load character will be
+sta .loadlocation_for_cout
+
+# store in D temporarily
+mov a, d
+
+#outputs the current character
+..loadlocation_for_cout
+lda 0xe00
+sta 0xffd
+
+# Add one value to address then store for later use
+mov d, a
+add c, a
+sta @charAddress
+
+# subtract 1 from b, if it's now zero then return else repeat loop
+mov b, a
+sub c, a
+mov a, b
+snz
+jmp .cout_return_to_main
+jmp .cout_standard_loop
+
+.cout_return_to_main
+ret
+
+
+
+# ### Console Input Function
+.cin
+
+# initial setup
+
+# setup chars_left to be -32 so that adding 1 per character sets the zero flag once the limit is reached
+lda @thirtyTwo
+mov a, b
+sub b, a
+sub b, a
+mov a, b
+
+lda @one
+mov a, c
+
+lda @cin_address
+sub a, a
+sta @cin_address
+
+# now have chars_left at -32 in b and 01 in c, and cin_address is set to 0
+
+
+.cin_standard_loop
+
+# start address to a
+lda @cin_address
+
+# storing it where the lower 8 bits in the store character will be
+sta .storelocation_for_cin
+
+
+# halt and wait for character input
+hlt
+
+# add 1 to cin_address and store for later
+add c, a
+sta @cin_address
+
+
+# once input is detected:
+lda 0xffc
+
+
+# store for comparison to ascii_enter and ascii_backspace
+mov a, d
+
+# check if enter; therefore it's finished
+lda @ascii_enter
+sub d, a
+
+# if zero then match, so return else continue
+snz
+jmp .cin_end
+
+# check if backspace; therefore remove the last character
+lda @ascii_backspace
+sub d, a
+
+# if zero then match, so return else continue
+snz
+jmp .cin_deal_with_backspaces
+
+
+# if not enter or backspace, continue:
+
+# restore current char and store in the variable place
+mov d, a
+..storelocation_for_cin
+sta 0xe00
+# also output to screen lol
+sta 0xffd
+
+# add one to the chars left, if the carry flag has been set then the 32 char limit has been reached and we can return.
+mov b, a
+add c, b
+snc
+jmp .cin_end
+
+jmp .cin_standard_loop
+
+
+.cin_deal_with_backspaces
+
+lda @cin_address
+# subtract here in addition to later b/c there's an automatic increment we have to account for
+sub c, a
+sta @cin_address
+
+
+# double check that message length isn't already at zero
+lda @thirtyTwo
+add b, a
+snz
+jmp .cin_standard_loop
+
+.cin_deal_with_backspaces_continue
+mov b, a
+sub c, b
+
+lda @cin_address
+sub c, a
+sta @cin_address
+
+mov d, a
+sta 0xffd
+
+jmp .cin_standard_loop
+
+.cin_end
+# make sure to save message_length for future use
+lda @thirtyTwo
+add b, a
+sta @messageLength
+ret

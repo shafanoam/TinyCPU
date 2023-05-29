@@ -7,6 +7,8 @@
 #       * hi                displays the word 'Hello!'         #
 #       * die               permanently halts the CPU          #
 #       * echo *str*        parrots the argument               #
+#       * cls               clears the screen                  #
+#       * fib               displays the fibonacci sequence    #
 #                                                              #
 ################################################################
 
@@ -27,6 +29,10 @@ var ascii_d 100
 var ascii_e 101
 # for command 'hi'
 var ascii_h 104
+# for command 'fib'
+var ascii_f 102
+# for command 'cls'
+var ascii_c 99
 
 # ## for command parsing
 var letter_being_tested 0
@@ -72,6 +78,8 @@ cal .cout
 # message: \n + Ready. + \n
 lda @ascii_enter
 sta 0xffd
+# used for 'cls' command
+.cls_jump_in_point
 lda 0xf01
 sta @charAddress
 lda 0xf21
@@ -86,15 +94,6 @@ cal .cin
 lda @ascii_enter
 sta 0xffd
 
-# test for 'die'
-lda @ascii_d
-mov a, b
-lda 0xe00
-# now have the ascii char being tested in b, and the actual char in a
-sub b, a
-# if zero then there's a match
-snz
-jmp .exit
 
 # test for 'hi'
 lda @ascii_h
@@ -116,7 +115,35 @@ sub b, a
 snz
 jmp .echo
 
+# test for 'fib'
+lda @ascii_f
+mov a, b
+lda 0xe00
+# now have the ascii char being tested in b, and the actual char in a
+sub b, a
+# if zero then there's a match
+snz
+jmp .fib
 
+# test for 'cls'
+lda @ascii_c
+mov a, b
+lda 0xe00
+# now have the ascii char being tested in b, and the actual char in a
+sub b, a
+# if zero then there's a match
+snz
+jmp .cls
+
+# test for 'die'
+lda @ascii_d
+mov a, b
+lda 0xe00
+# now have the ascii char being tested in b, and the actual char in a
+sub b, a
+# if zero then there's a match
+snz
+jmp .exit
 
 
 
@@ -144,6 +171,52 @@ sta @messageLength
 cal .cout
 jmp .command_loop
 
+
+.fib
+lda @one
+mov a, b
+sta 0xfff
+
+.fibonacci_loop
+mov a, c
+mov b, a
+mov c, b
+add b, a
+snc
+jmp .command_loop
+jmp .fib_delay
+
+# just here to make a delay lmao
+.fib_delay
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+mov a, a
+sta 0xfff
+jmp .fibonacci_loop
+
+
+.cls
+lda @one
+mov a, b
+sub a, a
+sub b, a
+sta 0xffd
+jmp .cls_jump_in_point
 
 
 .echo

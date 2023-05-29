@@ -4,18 +4,25 @@
 #              Created by shafanoam late May 2023              #
 #                                                              #
 #                      List of commands:                       #
-#       * hi                displays the word 'Hello!'         #
-#       * die               permanently halts the CPU          #
-#       * echo *str*        parrots the argument               #
+#       * hi              displays the word 'Hello!'           #
+#       * die             permanently halts the CPU            #
+#       * echo   *str*    parrots the argument                 #
+#       * read   *hex*    reads value at address *argument*    #
 #                                                              #
 ################################################################
 
 
 # ### system variables
 
+# ## nibble manipulation
+data 0xf59 2
+0f
+f0
+
 # ## constants
 var one 1
 var thirtyTwo 32
+var hex_ascii_conversion_value 48
 
 # ## ascii codes
 var ascii_enter 10
@@ -27,9 +34,65 @@ var ascii_d 100
 var ascii_e 101
 # for command 'hi'
 var ascii_h 104
+# for command 'read'
+var ascii_r 114
+
+# hex -> ascii conversion table
+data 0xf30 16
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+41
+42
+43
+44
+45
+46
+
+
+# ascii -> hex conversion table
+data 0xf40 23
+00
+01
+02
+03
+04
+05
+06
+07
+08
+09
+# 7 lines with nothing to account for odd placement of punctuation characters
+00
+00
+00
+00
+00
+00
+00
+# back to the hex values
+0a
+0b
+0c
+0d
+0e
+0f
+
+# above two tables starting locations
+data 0xf57 2
+30
+40
 
 # ## for command parsing
 var letter_being_tested 0
+var current_address_char 0
 
 # ## for console library
 var charAddress 0
@@ -117,6 +180,15 @@ snz
 jmp .echo
 
 
+# test for 'read'
+lda @ascii_r
+mov a, b
+lda 0xe00
+# now have the ascii char being tested in b, and the actual char in a
+sub b, a
+# if zero then there's a match
+snz
+jmp .read
 
 
 
@@ -143,6 +215,45 @@ lda 0xf22
 sta @messageLength
 cal .cout
 jmp .command_loop
+
+
+.read
+cal .remove_command_from_input
+lda .remcom_char_load_location
+
+# FIRST DIGIT
+add c, a
+sta .read_get_digit
+
+# normalize to ascii -> hex table
+lda @hex_ascii_conversion_value
+mov a, b
+..read_get_digit
+lda 0xe00
+sub b, d
+
+# add to 40 to access the ascii -> hex table
+lda 0xf58
+mov a, b
+mov d, a
+add b, a
+#   mov a, d
+
+#   # concatenate with the load instruction
+#   lda .read_high_address
+#   mov a, c
+#   lda 0xf5a
+#   and c, a
+#   sta 0xfff
+
+sta .read_low_address
+
+
+
+.read_high_address
+..read_low_address
+lda 0xf40
+
 
 
 

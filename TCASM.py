@@ -485,6 +485,11 @@ def fourth_pass():
 
         finalHexList[workingAddress + 1] = hex(
             varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')
+        print(finalHexList[workingAddress + 1])
+
+        # strip first digit if 3 digits long
+        if len(hex(varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')) == 3:
+            finalHexList[workingAddress + 1] = finalHexList[workingAddress + 1][1] + finalHexList[workingAddress + 1][2]
 
         # add the zero if need be
         if len(hex(varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')) == 1:
@@ -492,8 +497,8 @@ def fourth_pass():
 
         # if the length of the hexadecimal digit is three, then the high digit needs to be combined with the opcode
         if len(hex(varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')) == 3:
-            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + hex(
-                varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x')
+            finalHexList[workingAddress] = str(finalHexList[workingAddress]) + (hex(
+                varsList[varsList.index(returnForVariables[i * 2 + 1]) + 1]).lstrip('0x'))[0]
         else:
             finalHexList[workingAddress] = str(finalHexList[workingAddress]) + '0'
 

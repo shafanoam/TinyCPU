@@ -20,6 +20,7 @@ var thirtyTwo 32
 # ## ascii codes
 var ascii_enter 10
 var ascii_backspace 08
+var ascii_space 32
 # for command 'die'
 var ascii_d 100
 # for command 'echo'
@@ -40,18 +41,22 @@ var cin_address 0
 message 0xeec COMMANDER Loading:
 # # General prompt
 message 0xee6 Ready.
-# result of 'hi' instruction
+# # result of 'hi' instruction
 message 0xee0 Hello!
+# # unknown command
+message 0xed0 UNKNOWN COMMAND!
 # ## starting addresses of the above messages, in that order
-data 0xf00 3
+data 0xf00 4
 ec
 e6
 e0
+d0
 # ## length of the above messages, in that order
-data 0xf20 2
+data 0xf20 4
 12
 06
 06
+10
 
 .setup
 # message: COMMANDER Loading:
@@ -78,6 +83,9 @@ sta 0xffd
 #input
 cal .cin
 
+lda @ascii_enter
+sta 0xffd
+
 # test for 'die'
 lda @ascii_d
 mov a, b
@@ -98,6 +106,15 @@ sub b, a
 snz
 jmp .hello
 
+# test for 'echo'
+lda @ascii_e
+mov a, b
+lda 0xe00
+# now have the ascii char being tested in b, and the actual char in a
+sub b, a
+# if zero then there's a match
+snz
+jmp .echo
 
 
 
@@ -105,10 +122,13 @@ jmp .hello
 
 
 
-
-
-
-
+# if no command is detected execution will end up here
+lda 0xf03
+sta @charAddress
+lda 0xf23
+sta @messageLength
+cal .cout
+jmp .command_loop
 
 
 
@@ -125,6 +145,62 @@ cal .cout
 jmp .command_loop
 
 
+
+.echo
+cal .remove_command_from_input
+# prepare to print
+lda .remcom_char_load_location
+add c, a
+sta @charAddress
+mov d, a
+sub c, a
+sta 0xfff
+sta @messageLength
+
+# print and exit, starting with a newline so it isn't on the same line
+cal .cout
+jmp .command_loop
+
+
+.remove_command_from_input
+lda @ascii_space
+mov a, b
+lda @messageLength
+mov a, d
+lda @one
+mov a, c
+sub a, a
+sta .remcom_char_load_location
+
+cal .remove_command_from_input_loop
+
+
+.remove_command_from_input_loop
+
+..remcom_char_load_location
+lda 0xe00
+
+# compare to ascii_space
+sub b, a
+
+# if zero then return, otherwise continue again
+snz
+ret
+# for alignment
+mov a, a
+
+# add one to the load location
+lda .remcom_char_load_location
+add c, a
+sta .remcom_char_load_location
+
+# subtract one from messageLength
+mov d, a
+sub c, a
+mov a, d
+
+# repeat
+jmp .remove_command_from_input_loop
 
 
 

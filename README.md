@@ -1,8 +1,8 @@
 # TinyCPU
-A custom CPU and assembler I created for the Basys 3 FPGA board as a fun practical application of my CPU designing knowladge.
+A custom CPU and assembler I created as a fun practical application of my CPU designing knowladge. 
 
 ## Hardware Description:
-For those who will like run their code, a Logisim implementation of the CPU is provided.
+For those who will like run their own code, a Logisim implementation of the CPU is provided.
 
 The CPU is non-pipelined and has 4 registers and a 256-byte call stack.
 
